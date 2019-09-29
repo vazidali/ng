@@ -59,8 +59,8 @@ namespace myapi
             //container = services.BuildServiceProvider();
 
 
-           // services.AddDbContext<TimeVaultNewContext>(opts => opts.UseSqlServer(Configuration["Data:UCASAppDatabase:ConnectionString"]));
-            services.AddDbContext<TimeVaultNewContext>(options =>
+           // services.AddDbContext<dbContext>(opts => opts.UseSqlServer(Configuration["Data:UCASAppDatabase:ConnectionString"]));
+            services.AddDbContext<dbContext>(options =>
                                                           options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
 
