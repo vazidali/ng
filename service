@@ -1,0 +1,184 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { HttpHeaders } from '@angular/common/http';
+
+import { Observable } from 'rxjs';
+import { Register } from './register';
+import { Department } from '../../Settings/department/department';
+import { Branch } from '../../Settings/branch/branch';
+import { Addrole } from '../role/role';
+
+@Injectable()
+export class RegisterService {
+  formData: Department;
+  formDataBranch: Branch;
+
+  //url = 'http://localhost:58183/api';
+ // url_register = 'http://localhost:58183/Api/Register/createcontact';
+
+  constructor(private http: HttpClient) { }
+
+  AddcreateEmployee(employee: Register,roles : string[]): Observable<Register> {
+    console.log("rolid",roles);
+    const body = {
+      //Id: employee.Id,
+      FirtsName: employee.MiddleName,
+      MiddleName: employee.MiddleName,
+      LastName: employee.LastName,
+      LoginId:employee.loginid,
+      Email: employee.Email,
+      Password: employee.Password, 
+      PassportNumber: employee.PassportNumber,
+      EnrollmentId: employee.EnrollmentId,
+      NationalityId: employee.nationality,
+      BranchId: employee.branch,
+      EmployeCategoryId: employee.employecategory,
+      SectionId: employee.sections,
+      MachineUserId: employee.MachineUserId,
+      Dob: employee.dateOfBirth,
+      //JoiningDate: employee.joiningdate, 
+      DepartmentId:employee.department,  
+      DesignationId: employee.designations,  
+      Gender: employee.Gender,  
+      ManagerId: employee.employemanager,  
+      ShiftId: employee.ShiftId,  
+      Mobile: employee.mobileno,  
+      IdCard: employee.idcard,  
+      Education: employee.eductaion,  
+      Specialty: employee.specilaity,  
+      Picture: employee.picture,  
+      MaritalStatus: employee.maritalstatus,  
+      EmployeeId: employee.EmployeeId,  
+      Roles : roles
+      //Roles:'admin'
+    }
+    console.log("body",body);
+    
+   const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
+     var reqHeader = new HttpHeaders({'No-Auth':'True'});
+  return this.http.post<Register>(this.url_register , body,httpOptions);
+    // const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
+    // return this.http.post<Register>(this.url, employee, httpOptions);
+  }
+  getAllRoles() {
+     var reqHeader = new HttpHeaders({ 'No-Auth': 'True' });
+    const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
+    //return this.http.get(http://104.238.97.222:443" + '/api/GetAllRoles', httpOptions);
+
+     return this.http.get("http://104.238.97.222:443" + '/api/GetAllRoles', { headers: reqHeader });
+  }
+  getdepartment(): Observable<Department[]> {  
+    return this.http.get<Department[]>(this.url + '/Departments');  
+  }  
+  getbranch(): Observable<Department[]> {  
+    return this.http.get<Department[]>(this.url + '/Branches');  
+  } 
+  getemployecat(): Observable<Department[]> {  
+    return this.http.get<Department[]>(this.url + '/EmployeeCategories');  
+  } 
+
+  getedesignation(): Observable<Department[]> {  
+    return this.http.get<Department[]>(this.url + '/Designations');  
+  } 
+
+  getnationality(): Observable<Department[]> {  
+    return this.http.get<Department[]>(this.url + '/Nationalities');  
+  } 
+
+  getsections(): Observable<Department[]> {  
+    return this.http.get<Department[]>(this.url + '/Sections');  
+  } 
+
+  getManager(): Observable<Department[]> {  
+    return this.http.get<Department[]>(this.url + '/account/GetManager');  
+  } 
+
+  getShift(): Observable<Department[]> {  
+    return this.http.get<Department[]>(this.url + '/account/GetShift');  
+  } 
+
+  createRole(itemdata: Addrole): Observable<Addrole> {
+    console.log("save data role",itemdata);
+    const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
+    return this.http.post<Addrole>(this.url+ '/Register/Addrole/', itemdata, httpOptions);
+  }
+ 
+
+  authenticate(email,password) {
+
+
+  }
+
+}
+
+
+
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { HttpHeaders } from '@angular/common/http';
+
+import { Observable } from 'rxjs';
+import { Department } from './department';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class DepartmentService {
+  formData: Department;
+  //MenuItems: Menu[];
+  
+  
+ 
+ url = 'http://localhost:58183/api';
+  constructor(private http: HttpClient) {
+
+    console.log("menuitemes",this.formData);
+   }
+
+  createItem(itemdata: Department): Observable<Department> {
+    console.log("save data branch",itemdata);
+    const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
+    return this.http.post<Department>(this.url+ '/Departments/PostDepartment/', itemdata, httpOptions);
+  }
+  // saveOrUpdateOrder() {
+  //   var body = {
+  //     ...this.formData
+      
+  //   };
+  //   return this.http.post(this.url + '/menus/OrderItems.id', body);
+  // }
+
+  updateEmployee(employee: Department): Observable<Department> {  
+    const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json'}) };  
+    return this.http.put<Department>(this.url + '/Departments/',  
+    employee, httpOptions);  
+  } 
+
+  updateitem(OutletVM:Department):Observable<Department[]>    
+  {    
+    console.log("editvalues",OutletVM);
+   const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };    
+    return this.http.put<Department[]>(this.url + '/Departments/PutDepartment/', OutletVM, httpOptions)    
+  }    
+  DeleteItem(id:string):Observable<Department>    
+  {    
+    const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json'}) };  
+    return this.http.delete<Department>(this.url + '/Departments/DeleteDepartment?id=' +id,  
+ httpOptions);  
+  }  
+
+  
+  getOrderByID(id:number):Observable<Department[]> {
+    console.log("by id call",id);
+    return this.http.get<Department[]>(this.url + '/Departments/'+id);
+  }
+  
+  
+  getdata(): Observable<Department[]> {  
+    return this.http.get<Department[]>(this.url + '/Departments');  
+  }  
+
+}
+
+
+
