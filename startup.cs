@@ -156,7 +156,7 @@ namespace myapi
             app.UseCors();
             app.UseMvc();
             dbContext.Database.EnsureCreated();
-           
+           //Scaffold-DbContext "Server=abc;Database=db1;UID=sa;PWD=123;" 'Microsoft.EntityFrameworkCore.SqlServer' -OutputDir Models/DB -Verbose -force
         }
 
 
