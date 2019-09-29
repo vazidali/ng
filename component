@@ -1,0 +1,683 @@
+import { Component, OnInit } from '@angular/core';  
+import { FormBuilder, Validators } from '@angular/forms';  
+import { Observable ,  Subscription } from 'rxjs'; 
+import { EmployeeService } from '../employee.service';  
+import { Register } from '../../register/register';  
+import { Employee } from '../employee';  
+import { HttpClient } from '@angular/common/http';
+import { HttpHeaders } from '@angular/common/http';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { ToastrService } from 'ngx-toastr';
+import { Router, ActivatedRoute } from '@angular/router';
+import { NgForm } from '@angular/forms';
+import { NotificationService } from '../../../shared/notification.service';
+import { Pipe, PipeTransform } from '@angular/core';
+import * as _ from 'lodash';
+import { NgxSpinnerService } from "ngx-spinner";
+import {AssignManagerComponent} from "../assign-manager/assign-manager.component";
+import { ActiveInactiveComponent } from '../active-inactive/active-inactive.component';
+@Component({
+  selector: 'app-list-employee',
+  templateUrl: './list-employee.component.html',
+  styleUrls: ['./list-employee.component.css']
+})
+export class ListEmployeeComponent implements OnInit {
+
+  p: number;
+  searchTerm: string;
+  dataSaved = false;  
+  massage: string;  
+  FromStudent: any;  
+  StudentId: string = "0";  
+ 
+   allEmployee: Observable<Employee[]>; 
+   messages: any[] = [];
+   subscription: Subscription;
+   config: any;
+   data = [ 
+  ];
+   constructor(private spinner: NgxSpinnerService,private http: HttpClient,private formbulider: FormBuilder,private notificationService: NotificationService, private service:EmployeeService,private dialog: MatDialog, private router: Router,
+    private currentRoute: ActivatedRoute) {
+    this.loadAlldata();
+   } 
+   loadAlldata() {  
+    // subscribe to home component messages
+    this.subscription = this.service.getdata().subscribe(message => {
+     if (message) {
+       console.log("data employee",message);
+       this.messages.push(message);
+       this.data=message
+       this.spinner.hide();
+     
+     } else {
+       // clear messages when empty message received
+       this.messages = [];
+     }
+   });
+   
+       // this.http.get('http://date.jsontest.com')
+       //     .map(res => res.json())
+       //     .subscribe(
+       //        data => this.data = data,
+       //        () => console.log('done'),
+       //        err => this.error(err));
+   
+       this.allEmployee = this.service.getdata();  
+   
+      
+       
+     }
+
+     pageChanged(event){
+      this.config.currentPage = event;
+    }
+    
+    DeleteItem(id: string) {  
+      if (confirm("Are You Sure To Delete this Informations")) {  
+          this.service.DeleteItem(id).subscribe(  
+              () => {  
+                  this.dataSaved = true;  
+                  this.massage = "Deleted Successfully";  
+                  this.notificationService.success(':: Deleted successfully');
+                  this.loadAlldata();  
+              });  
+      }  
+  }   
+  
+  AssignManager(orderItemIndex, Id,name) {
+    console.log("empo ids",Id);
+      const dialogConfig = new MatDialogConfig();
+      dialogConfig.autoFocus = true;
+      dialogConfig.disableClose = true;
+      dialogConfig.width = "50%";
+      
+     dialogConfig.data = {   Id,name };
+      this.dialog.open(AssignManagerComponent, dialogConfig).afterClosed().subscribe(res => {
+        this.loadAlldata();
+      });
+    }
+
+    ActiveInActive(orderItemIndex, Id) {
+      console.log("empo ids",Id);
+        const dialogConfig = new MatDialogConfig();
+        dialogConfig.autoFocus = true;
+        dialogConfig.disableClose = true;
+        dialogConfig.width = "50%";
+        
+       dialogConfig.data = {   orderItemIndex, Id };
+        this.dialog.open(ActiveInactiveComponent, dialogConfig).afterClosed().subscribe(res => {
+          this.loadAlldata();
+        });
+      }
+
+    // EditItem(orderItemIndex, Id) {
+    //   console.log("dataedit",orderItemIndex,Id);
+    //   const dialogConfig = new MatDialogConfig();
+    //   dialogConfig.autoFocus = true;
+    //   dialogConfig.disableClose = true;
+    //   dialogConfig.width = "50%";
+    //   dialogConfig.data = { orderItemIndex, Id };
+    //   this.dialog.open(AssignManagerComponent, dialogConfig).afterClosed().subscribe(res => {    
+    //     // if (res === 'submit') {
+    //     // }
+    //       console.log("dialog data",res);
+    //       this.loadAlldata();    
+       
+    //   });
+    // }
+  
+
+  ngOnInit() {
+    this.spinner.show();
+  }
+
+}
+
+
+
+<ngx-spinner
+bdColor="rgba(51,51,51,0.8)"
+size = "default"
+color="#fff"
+fullScreen= "true"
+type="ball-scale-multiple">
+<p style="font-size: 20px; color: white">Loading...</p>
+</ngx-spinner>
+
+<section class="dashboard-wrap mtb-40">
+  <div class="container">
+        <div class="body-content">
+        <div class="row">
+  <div class="col-sm-12">
+  <div class="dash">
+    <div >
+        <div  class="dash-title listing-header" >
+            <h3>Employee</h3>
+        </div>
+       
+      </div> 
+      <div>
+      <div class="col-sm-5" style="padding-top:2px;padding-bottom:20px;" >  
+          <input class="form-control" type="text" placeholder="Search......." [(ngModel)]="filter">        
+     </div> 
+    
+     <div  class="dash-nav listing-header float-right">
+        <!-- <a class="btn btn-sm btn-success text-white" (click)="AddOrEditOrderItem(null,service.formData.OrderID)"><i class="fa fa-plus"></i> Add Item</a> -->
+        <a  routerLinkActive="active" [routerLink]="['/usermanagement/register']" class="btn btn-sm btn-success text-white"><i class="fa fa-plus"></i>Add Employee</a>
+    </div></div> 
+      <table class="table table-bordered table-striped">
+        <tr class="table-header-cls">
+            <th>#UserName</th>
+            <th>Name</th>
+            <th>Manager</th>
+            <th>MachineUserId</th>
+            <th>Active</th>
+            <!-- <th>Gender</th>            
+            <th>DOB</th>
+            <th>Email</th> -->
+            <th>Branch</th>
+            <th>Category</th>
+            <th>Department</th>
+            <th>Designation</th>
+            <th>Nationality</th>
+            <th>Section</th>
+            <th>Action</th>
+            <!-- <th>EnrollId</th>
+            <th>Role</th> -->
+            <!-- <th>Action</th> -->
+        </tr>
+        <tr *ngFor="let post of data |filter:filter| paginate: { itemsPerPage: 12, currentPage: p };let i=index;">
+            <!-- <td>{{post.id}}</td> -->
+            <!-- <td><img src="../../../assets/images/" ></td> -->
+            <td>{{post.userName}}</td>
+            <td>{{post.name}}</td>
+            <td>{{post.manager}}</td>
+            <td>{{post.machineUserId}}</td>
+            
+            <td>
+              <input type="checkbox" disabled="true"  name="isActive" value="{{post.isActive}}" [checked]="selected" #active="ngModel" [(ngModel)]="post.isActive">
+              </td>
+            
+            <!-- <td>{{post.gender}}</td>            
+            <td>{{post.joiningDate}}</td>
+            <td>{{post.email}}</td> -->
+            <td>{{post.branch}}</td>
+            <td>{{post.employeCategory}}</td>
+            <td>{{post.department}}</td>
+            <td>{{post.designation}}</td>
+            <td>{{post.nationality}}</td>
+            <td>{{post.section}}</td>
+            <td class="action">
+                
+              <a  (click)="AssignManager(i,post.id,post.name)" class="btn btn-sm btn-info text-white">Assign Manager</a>
+              <a  (click)="ActiveInActive(i,post.id)" class="btn btn-sm btn-info text-white">Active</a>
+              <a  routerLinkActive="active" [routerLink]="['/usermanagement/Employee/Edit',post.id]" class="btn btn-sm btn-info text-white"><i class="fa fa-pencil"></i></a>                  
+              <a routerLinkActive="active" [routerLink]="['/usermanagement/Employee/Detail',post.id]" class="btn btn-sm btn-info text-white ml-1"><i class="fa fa-info"></i></a>
+              <a (click)="DeleteItem(post.id)" class="btn btn-sm btn-danger text-white ml-1"><i class="fa fa-trash"></i></a>
+             
+          </td>
+            <!-- <td>{{post.enrollId}}</td>
+            <td>{{post.role}}</td> -->
+            
+            <!-- <td>{{post.EnteredDate | date: 'mediumDate'}}</td> -->
+            <!-- <td class="action">
+                <a  (click)="EditItem(i,post.id)" class="btn btn-sm btn-info text-white"><i class="fa fa-pencil"></i></a>
+                <a (click)="DeleteItem(post.id)" class="btn btn-sm btn-danger text-white ml-1"><i class="fa fa-trash"></i></a>
+            </td> -->
+        </tr>
+        
+      </table>
+      <ul class="pagination">  
+          <pagination-controls (pageChange)="p = $event"></pagination-controls>  
+          </ul>  
+      
+  </div>   
+</div>
+</div> </div>   
+</div>
+</section>
+
+
+
+
+
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import {FormGroup, AbstractControl, FormBuilder, Validators} from '@angular/forms';
+import{Department} from '../department'
+import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material";
+import { DepartmentService } from '../department.service';  
+import { Observable ,  Subscription } from 'rxjs'; 
+import { NotificationService } from '../../../shared/notification.service';
+
+@Component({
+  selector: 'app-add-department',
+  templateUrl: './add-department.component.html',
+  styleUrls: ['./add-department.component.css']
+})
+export class AddDepartmentComponent implements OnInit {
+
+  dataForm: any;
+  public submitted:boolean = false;
+  dataSaved = false;
+  massage = null;
+  constructor(private fb:FormBuilder,private router:Router, private service:DepartmentService,private notificationService: NotificationService, public dialogRef: MatDialogRef<AddDepartmentComponent>,) { 
+    this.dataForm = fb.group({
+      'name': ['', [Validators.required]],
+      'nameEn': ['', [Validators.required]],
+      'sortOrder': ['', [Validators.required]],
+      'active': ['', [Validators.required]]     
+      //'cpassword': ['', Validators.compose([Validators.required, Validators.pattern(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])\w{6,}$/)])]
+    });
+  }
+
+  ngOnInit() {
+  }
+  
+  get f() { return this.dataForm.controls; }
+  onFormSubmit() {
+    this.submitted = true;
+    const savedata = this.dataForm.value;
+   
+    this.CreateData(savedata);
+  }
+
+  CreateData(items: Department) {  
+    
+    //console.log("form data",this.employee);
+      this.service.createItem(items).subscribe(  
+        () => {  
+          this.dataSaved = true;  
+          this.massage = 'Record saved Successfully';  
+          this.dialogRef.close();
+          this.notificationService.success(':: Submitted successfully');
+          //this.loadAllEmployees();  
+          //this.employeeIdUpdate = null;  
+          //this.employeeForm.reset();  
+        }  
+      );  
+ 
+      }
+
+}
+
+
+
+
+<div class="row">
+    <div class="col-lg-12 col-md-offset-0">
+      <div class="panel panel-default">
+        <div class="panel-heading">Edit Shift Details
+
+         <a style="float: right;" routerLinkActive="active" [routerLink]="['/shifts/manageshift']"  class="btn btn-sm btn-success text-white"><i class="fa fa-backward"></i>Back</a>
+        </div>
+        <div class="panel-body">
+        
+<form #form="ngForm" autocomplete="off" (submit)="onSubmit(form)">
+
+              <div class="col-md-4 col-md-offset-0">
+                  <div class="form-group">
+                      <input name="shiftName" #shiftName="ngModel" [(ngModel)]="editdata.shiftName" placeholder="Shift Name" class="form-control">
+                                
+                </div>
+                <div  class="form-group">
+                    <input name="endDate" #endDate="ngModel" [(ngModel)]="editdata.endDate" bsDatepicker datePicker.lyCurrentMonth placeholder="End date" class="form-control"  >
+                 
+                  
+                  </div>
+
+                  <div class="form-group">
+                      <input name="ramzanStartTime" #ramzanStartTime="ngModel" [(ngModel)]="editdata.ramzanStartTime" atp-time-picker  placeholder="ramzanStartTime" class="form-control"  >
+                     
+                    
+                  </div>    
+                  
+                  <div class="form-group">
+                      <input name="graceOut" #graceOut="ngModel" [(ngModel)]="editdata.graceOut" placeholder="graceIn " class="form-control" >
+                     
+                        
+                  </div>
+
+                <div class="form-group">               
+                    <select  class="form-control"   name="empCategoryId" #empCategoryId="ngModel" [(ngModel)]="editdata.empCategoryId"   >  
+                        <option [ngValue]="undefined" selected>--Select Eemployecategory--</option>                  
+                        <option *ngFor="let empcat of emplcatdata" value={{empcat.id}}>  
+                            {{empcat.name}}  
+                        </option>  
+                  </select>  
+                  
+                </div>
+
+                
+              
+               
+
+              </div>        
+            <div class="col-md-4 col-md-offset-0">
+                <div class="form-group">
+                    <input name="shiftNameEn" #shiftNameEn="ngModel" [(ngModel)]="editdata.shiftNameEn" placeholder="Shift Name" class="form-control" >
+                                
+              </div>  
+               
+              <div class="form-group">
+                  <input name="startTime" #startTime="ngModel" atp-time-picker [(ngModel)]="editdata.startTime"  placeholder="startTime" class="form-control" >
+                 
+              </div>        
+             
+             
+              <div class="form-group">
+                  <input name="ramzanEndTime" #ramzanEndTime="ngModel" [(ngModel)]="editdata.ramzanEndTime" atp-time-picker  placeholder="ramzanEndTime" class="form-control"  >
+               
+              </div>      
+             
+             
+              <div class="form-group">
+         <input name="totalNormalHours" #totalNormalHours="ngModel" [(ngModel)]="editdata.totalNormalHours" placeholder="graceIn " class="form-control" >
+                     
+                   
+                  </div>
+
+                  <div class="form-group">
+                      <select  class="form-control"  name="sectionId" #sectionId="ngModel" [(ngModel)]="editdata.sectionId" >  
+                      <option [ngValue]="undefined" selected>--Select Sections--</option>                  
+                      <option *ngFor="let sectiondt of sectionsdata" value={{sectiondt.id}}>  
+                          {{sectiondt.name}}  
+                      </option>  
+                </select>  
+                                     
+                      </div>
+
+
+            </div>
+  
+            <div class="col-md-4 col-md-offset-0">
+  
+                <div  class="form-group">
+                    <input name="fromDate" #fromDate="ngModel" [(ngModel)]="editdata.fromDate" bsDatepicker  placeholder="Start date" class="form-control"  >
+                    
+                 
+                   
+                  </div>
+                  <div class="form-group">
+                      <input name="endTime" #endTime="ngModel" [(ngModel)]="editdata.endTime" atp-time-picker  placeholder="endTime" class="form-control"  >
+                      
+                  
+                  </div>
+  
+                  <div class="form-group">
+                      <input name="graceIn" #graceIn="ngModel" [(ngModel)]="editdata.graceIn" placeholder="graceIn " class="form-control" >
+                     
+                  </div>
+             
+                  <div class="form-group">
+                     <input name="totalRamadhanHours" #totalRamadhanHours="ngModel" [(ngModel)]="editdata.totalRamadhanHours" placeholder="graceIn " class="form-control" >
+                     
+                        
+                      </div>
+
+                      <!-- <div class="form-group">
+                          <input type="text" formControlName="TotalRamadhanHours" placeholder="Total Ramadhan Hours" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.TotalRamadhanHours.errors }" />
+                            <div *ngIf="submitted && f.TotalRamadhanHours.errors" class="invalid-feedback">
+                                <div *ngIf="f.TotalRamadhanHours.errors.required">Total Ramadhan Hours Hours is required</div>
+                            </div>
+                          </div> -->
+            </div>  
+            
+            <div class="">
+                <div class="col-sm-12 col-sm-offset-0">
+
+                    <div class="col-sm-2 col-sm-offset-0">
+                        <div class="input-group"> 
+                            <div class="form-group col-md-8">
+                             <label>Working Days:</label></div>
+                            
+                         
+                            
+                        </div>
+                      </div>  
+
+                    <div class="col-sm-2 col-sm-offset-0">
+                        <div class="input-group"> 
+                            <div class="form-group col-md-4">
+                             <label>Sunday</label></div>
+                             <div class="form-group col-sm-4">
+                                <input type="checkbox" name="sun" value="editdata.sun"  #active="ngModel" [(ngModel)]="editdata.sun">      
+                        
+                          </div>
+                         
+                            
+                        </div>
+                      </div>  
+                      <div class="col-sm-2 col-sm-offset-0">
+                          <div class="input-group"> 
+                              <div class="form-group col-md-4">
+                               <label>Monday</label></div>
+                               <div class="form-group col-sm-4">
+                                  <input type="checkbox" name="mon" value="editdata.mon"  #active="ngModel" [(ngModel)]="editdata.mon">          
+                             
+                            </div>
+                           
+                              
+                          </div>
+                        </div>  
+                        <div class="col-sm-2 col-sm-offset-0">
+                            <div class="input-group"> 
+                                <div class="form-group col-md-4">
+                                 <label>Tuesday</label></div>
+                                 <div class="form-group col-sm-4">
+                                    <input type="checkbox" name="tue" value="editdata.tue"  #active="ngModel" [(ngModel)]="editdata.tue">             
+                               
+                              </div>
+                             
+                                
+                            </div>
+                          </div>  
+                          <div class="col-sm-2 col-sm-offset-0">
+                              <div class="input-group"> 
+                                  <div class="form-group col-md-4">
+                                   <label>Wednesday</label></div>
+                                   <div class="form-group col-sm-4">
+                                      <input type="checkbox" name="wed" value="editdata.wed"  #active="ngModel" [(ngModel)]="editdata.wed">        
+                                 
+                                </div>
+                               
+                                  
+                              </div>
+                            </div>  
+                            <div class="col-sm-2 col-sm-offset-0">
+                                <div class="input-group"> 
+                                    <div class="form-group col-md-4">
+                                     <label>Thursday</label></div>
+                                     <div class="form-group col-sm-4">
+                                        <input type="checkbox" name="thu" value="editdata.thu"  #active="ngModel" [(ngModel)]="editdata.thu">          
+                                  
+                                  </div>
+                                 
+                                    
+                                </div>
+                              </div>  
+                              <div class="col-sm-2 col-sm-offset-0">
+                                  <div class="input-group"> 
+                                      <div class="form-group col-md-4">
+                                       <label>Friday</label></div>
+                                       <div class="form-group col-sm-4">
+                                          <input type="checkbox" name="fri" value="editdata.fri"  #active="ngModel" [(ngModel)]="editdata.fri">        
+                                     
+                                    </div>
+                                   
+                                      
+                                  </div>
+                                </div>  
+                                <div class="col-sm-2 col-sm-offset-0">
+                                    <div class="input-group"> 
+                                        <div class="form-group col-md-4">
+                                         <label>Sarurday</label></div>
+                                         <div class="form-group col-sm-4">
+                                            <input type="checkbox" name="sat" value="editdata.sat"  #active="ngModel" [(ngModel)]="editdata.sat">              
+                                       
+                                      </div>
+                                     
+                                        
+                                    </div>
+                                  </div>  
+                  </div>  
+                </div>  
+  
+          <div class="col-md-4 col-md-offset-4">
+            <div class="form-group">
+              <button type="submit" class="btn btn-primary">Submit Data</button>
+                <button type="reset" class="btn btn-default">Reset Data</button>
+            </div>
+          </div>
+           
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+  
+  import { Component, OnInit,  Inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material";
+import { NgForm } from '@angular/forms';
+import { Router ,ActivatedRoute} from '@angular/router';
+import{ManageShift} from '../manageshift'
+import { ManageshiftService } from '../manageshift.service';  
+import { Observable ,  Subscription } from 'rxjs'; 
+import { NotificationService } from '../../../shared/notification.service';
+import { Pipe, PipeTransform } from '@angular/core';
+@Component({
+  selector: 'app-edit-mangeshift',
+  templateUrl: './edit-mangeshift.component.html',
+  styleUrls: ['./edit-mangeshift.component.css']
+})
+export class EditMangeshiftComponent implements OnInit {
+  subscriptionbarnch: Subscription;
+  private sub: any;
+  id: number;
+  formData: ManageShift;
+  editdata:any;
+  data:any;
+  messages: any[] = [];
+  //itemList: Item[]
+  subscription: Subscription;;
+  isValid: boolean = true;
+  sectionsdata = [];
+  emplcatdata = [];
+  constructor(private route: ActivatedRoute,
+    private service: ManageshiftService,private notificationService: NotificationService,private router:Router,
+    ) { }
+
+  ngOnInit() {
+
+    this.formData = {
+      Id: '', 
+      ShiftName:'',
+      ShiftNameEn:''  ,
+      FromDate:new Date('06/19/2019') ,
+      EndDate:new Date('06/19/2019') ,
+      StartTime:'',
+      EndTime:'',   
+      RamzanStartTime:'',   
+      RamzanEndTime:'',
+      GraceIn:'',
+      GraceOut:'',
+      IsRamzan:'',
+      Sun:'',
+      Mon:'',
+      Tue:'',
+      Wed:'',
+      Thu:'',
+      Fri:'',
+      Sat:'',
+      SectionId:'',
+      EmpCategoryId:'',
+      TotalNormalHours:'',
+      TotalRamadhanHours:'',
+      CompanyId:'',   
+      SortOrder:'',
+      Active:''
+    }
+   
+    this.FillDDL();
+    this.sub = this.route.params.subscribe(params => {
+      this.id = +params['id']; // (+) converts string 'id' to a number
+  
+      this.subscription =  this.service.getDataID(this.id).subscribe(message => {
+        if (message) {
+          console.log("data by id response",message);
+          //this.messages.push(message);
+          this.editdata=message
+          console.log("edit data shiftmng",this.editdata);
+        } else {
+          // clear messages when empty message received
+          //this.messages = [];
+        }
+      });
+   });
+
+   this.formData = Object.assign({}, this.editdata);
+   console.log("After edit data shiftmng",this.formData);
+  }
+
+  onSubmit(branchVM: ManageShift) {
+    //if (this.validateForm(form.value)) {
+     
+    
+        //this.menuService.MenuItems[this.data.orderItemIndex] = form.value;
+        this.service.updateitem(this.editdata).subscribe(Response => { 
+        
+        
+          this.notificationService.success(':: Updated successfully');
+          
+         console.log("updated maenu",Response);
+         });  
+  
+ }
+ loadAlldata() {  
+  // subscribe to home component messages
+  this.subscription = this.service.getdata().subscribe(message => {
+   if (message) {
+     console.log("data response",message);
+     this.messages.push(message);
+     this.data=message
+   } else {
+   
+     this.messages = [];
+   }
+ });
+}
+  validateForm(formData: ManageShift) {
+    this.isValid = true;
+    if (formData.ShiftName == '')
+      this.isValid = false;
+    else if (formData.ShiftNameEn == '')
+      this.isValid = false;
+    return this.isValid;
+  }
+
+  FillDDL()  
+  {  
+    this.subscriptionbarnch = this.service.getsection().subscribe(sections => {
+      if (sections) {
+        this.sectionsdata=sections
+        console.log("section data",this.sectionsdata);      
+      } else {
+            }
+    });
+    this.subscriptionbarnch = this.service.getemployecat().subscribe(emplcat => {
+      if (emplcat) {   
+        this.emplcatdata=emplcat;        
+      } else {
+            }
+    });  
+
+   
+
+  }  
+
+}
+
+
+
